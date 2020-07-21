@@ -91,6 +91,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             size = results.size();
 
             // set items into adapter
+            // try and catch are required to catch errors
             try
             {
                 while (size >= 0)
@@ -108,6 +109,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             // unregister receiver
             unregisterReceiver(this);
         }
-
     };
+
 }
