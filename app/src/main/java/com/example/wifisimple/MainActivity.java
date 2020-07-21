@@ -24,35 +24,43 @@ import java.util.List;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
 
-    WifiManager wifi;
+    // UI components
     ListView lv;
     Button buttonScan;
-    int size = 0;
-    List<ScanResult> results;
 
-    String ITEM_KEY = "key";
-    ArrayList<String> arraylist = new ArrayList<>();
+    // variables
+    int size = 0;
+
+    // objects
+    WifiManager wifi;
     ArrayAdapter adapter;
+    List<ScanResult> results;
+    ArrayList<String> arraylist = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        buttonScan = (Button) findViewById(R.id.scan);
+        // initialize UI components
+        buttonScan = findViewById(R.id.scan);
         buttonScan.setOnClickListener(this);
-        lv = (ListView)findViewById(R.id.wifilist);
+        lv = findViewById(R.id.wifilist);
 
+        // get default Wifi service
         wifi = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+
+        // enable Wifi
         if (wifi.isWifiEnabled() == false)
         {
             Toast.makeText(getApplicationContext(), "wifi is disabled..making it enabled", Toast.LENGTH_LONG).show();
             wifi.setWifiEnabled(true);
         }
-        this.adapter =  new ArrayAdapter<>(this,android.R.layout.simple_list_item_1,arraylist);
-        lv.setAdapter(this.adapter);
 
-        scanWifiNetworks();
+        // initialize ArrayAdapter object
+        this.adapter =  new ArrayAdapter<>(this,android.R.layout.simple_list_item_1,arraylist);
+        // set adapter to list
+        lv.setAdapter(this.adapter);
     }
 
     public void onClick(View view)
@@ -61,27 +69,28 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void scanWifiNetworks(){
-
         arraylist.clear();
+        //register broadcast listener
         registerReceiver(wifi_receiver, new IntentFilter(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION));
-
+        // request a scan
         wifi.startScan();
 
         Log.d("WifScanner", "scanWifiNetworks");
-
         Toast.makeText(this, "Scanning....", Toast.LENGTH_SHORT).show();
     }
 
-    BroadcastReceiver wifi_receiver= new BroadcastReceiver()
+    BroadcastReceiver wifi_receiver = new BroadcastReceiver()
     {
         @Override
         public void onReceive(Context c, Intent intent)
         {
             Log.d("WifScanner", "onReceive");
+
+            // get scan results
             results = wifi.getScanResults();
             size = results.size();
-            unregisterReceiver(this);
 
+            // set items into adapter
             try
             {
                 while (size >= 0)
@@ -95,7 +104,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             {
                 Log.w("WifScanner", "Exception: "+e);
             }
-        }
-    };
 
+            // unregister receiver
+            unregisterReceiver(this);
+        }
+
+    };
 }
