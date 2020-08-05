@@ -1,11 +1,13 @@
 package com.example.wifisimple;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-
+import android.Manifest;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.pm.PackageManager;
 import android.net.wifi.ScanResult;
 import android.net.wifi.WifiManager;
 import android.os.Bundle;
@@ -14,100 +16,109 @@ import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
-import android.widget.SimpleAdapter;
-import android.widget.TextView;
 import android.widget.Toast;
-
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
-
-    // UI components
-    ListView lv;
-    Button buttonScan;
+    // constants
+    private static final int PERMISSION_CODE = 1000;
 
     // variables
-    int size = 0;
+    int scanResultsSize = 0;
+
+    // UI components
+    ListView listWifi;
+    Button buttonScan;
 
     // objects
-    WifiManager wifi;
-    ArrayAdapter adapter;
-    List<ScanResult> results;
-    ArrayList<String> arraylist = new ArrayList<>();
+    WifiManager wifiManager;
+    List<ScanResult> scanResults;
+    private final ArrayList<String> arraylist = new ArrayList<>();
+    ArrayAdapter<String> adapter;
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    public void onCreate(Bundle savedInstanceState)
+    {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        // initialize UI components
-        buttonScan = findViewById(R.id.scan);
+        // bind UI components
+        buttonScan = (Button) findViewById(R.id.scanButton);
+        listWifi = (ListView)findViewById(R.id.wifiList);
         buttonScan.setOnClickListener(this);
-        lv = findViewById(R.id.wifilist);
 
-        // get default Wifi service
-        wifi = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
-
-        // enable Wifi
-        if (wifi.isWifiEnabled() == false)
-        {
-            Toast.makeText(getApplicationContext(), "wifi is disabled..making it enabled", Toast.LENGTH_LONG).show();
-            wifi.setWifiEnabled(true);
+        // check for permissions
+        if (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_DENIED) {
+            String[] permission = {Manifest.permission.ACCESS_FINE_LOCATION};
+            requestPermissions(permission, PERMISSION_CODE);
+        } else {
+            startWifiManager();
         }
 
-        // initialize ArrayAdapter object
+        // set ArrayAdapter
         this.adapter =  new ArrayAdapter<>(this,android.R.layout.simple_list_item_1,arraylist);
-        // set adapter to list
-        lv.setAdapter(this.adapter);
+        listWifi.setAdapter(this.adapter);
     }
 
-    public void onClick(View view)
-    {
+    // handle runtime permissions
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        if (requestCode == PERMISSION_CODE) {
+            if (grantResults.length > 0 && grantResults[0] ==
+                    PackageManager.PERMISSION_GRANTED) {
+                startWifiManager();
+            } else {
+                Toast.makeText(this, "Permission denied. Cannot run app.", Toast.LENGTH_SHORT).show();
+            }
+        }
+    }
+
+    // handle default WifiManager
+    public void startWifiManager() {
+        wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+        if (!wifiManager.isWifiEnabled()) {
+            Toast.makeText(getApplicationContext(), "wifi is disabled..making it enabled", Toast.LENGTH_LONG).show();
+            wifiManager.setWifiEnabled(true);
+        }
         scanWifiNetworks();
     }
 
-    private void scanWifiNetworks(){
-        arraylist.clear();
-        //register broadcast listener
-        registerReceiver(wifi_receiver, new IntentFilter(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION));
-        // request a scan
-        wifi.startScan();
-
-        Log.d("WifScanner", "scanWifiNetworks");
-        Toast.makeText(this, "Scanning....", Toast.LENGTH_SHORT).show();
+    @Override
+    public void onClick(View view) {
+        scanWifiNetworks();
     }
 
-    BroadcastReceiver wifi_receiver = new BroadcastReceiver()
-    {
+    // register BoaadcastReceiver
+    private void scanWifiNetworks(){
+        arraylist.clear();
+
+        IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION);
+        this.registerReceiver(wifi_receiver, intentFilter);
+
+        wifiManager.startScan();
+        Log.d("WifScanner", "Scanning Wifi Networks");
+        Toast.makeText(this, "Scanning started...", Toast.LENGTH_SHORT).show();
+    }
+
+    // BroadcastReceiver class
+    private final BroadcastReceiver wifi_receiver= new BroadcastReceiver() {
         @Override
-        public void onReceive(Context c, Intent intent)
-        {
-            Log.d("WifScanner", "onReceive");
+        public void onReceive(Context c, Intent intent) {
+            scanResults = wifiManager.getScanResults();
+            scanResultsSize = scanResults.size();
+            unregisterReceiver(this);
 
-            // get scan results
-            results = wifi.getScanResults();
-            size = results.size();
-
-            // set items into adapter
-            // try and catch are required to catch errors
-            try
-            {
-                while (size >= 0)
-                {
-                    size--;
-                    arraylist.add(results.get(size).SSID);
+            try {
+                while (scanResultsSize >= 0) {
+                    scanResultsSize--;
+                    arraylist.add(scanResults.get(scanResultsSize).SSID);
                     adapter.notifyDataSetChanged();
                 }
+            } catch (Exception e) {
+                e.printStackTrace();
             }
-            catch (Exception e)
-            {
-                Log.w("WifScanner", "Exception: "+e);
-            }
-
-            // unregister receiver
-            unregisterReceiver(this);
         }
     };
 

@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">WifiSimple</string>
+    <string name="scan_button_name">Scan Again</string>
 </resources>

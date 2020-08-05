@@ -6,19 +6,17 @@
     android:layout_height="match_parent">
 
     <ListView
-        android:id="@+id/wifilist"
+        android:id="@+id/wifiList"
         android:layout_width="match_parent"
         android:layout_height="312dp"
         android:layout_weight="0.97" />
 
-
     <Button
-        android:id="@+id/scan"
+        android:id="@+id/scanButton"
         android:layout_width="match_parent"
         android:layout_height="50dp"
         android:layout_gravity="bottom"
-        android:layout_margin="15dp"
-        android:background="@android:color/holo_green_light"
-        android:text="Scan Again" />
-
+        android:layout_margin="10dp"
+        android:background="@android:color/holo_purple"
+        android:text="@string/scan_button_name" />
 </LinearLayout>
