@@ -1,4 +1,4 @@
-# Simple Bluetooth scanner
+# Simple Wifi scanner
 
 <img src="./Screenshots/WifiList.png" width="300">
 
