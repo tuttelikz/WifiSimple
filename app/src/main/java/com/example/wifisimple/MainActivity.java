@@ -95,7 +95,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         IntentFilter intentFilter = new IntentFilter();
         intentFilter.addAction(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION);
-        this.registerReceiver(wifi_receiver, intentFilter);
+        this.registerReceiver(wifiReceiver, intentFilter);
 
         wifiManager.startScan();
         Log.d("WifScanner", "Scanning Wifi Networks");
@@ -103,7 +103,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     // BroadcastReceiver class
-    private final BroadcastReceiver wifi_receiver= new BroadcastReceiver() {
+    private final BroadcastReceiver wifiReceiver= new BroadcastReceiver() {
         @Override
         public void onReceive(Context c, Intent intent) {
             scanResults = wifiManager.getScanResults();
